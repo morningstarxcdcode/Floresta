@@ -890,7 +890,7 @@ impl<PersistedState: ChainStore> ChainState<PersistedState> {
         }
 
         // Regtest don't have retarget
-        if !params.params.no_pow_retargeting && (next_height) % 2016 == 0 {
+        if !params.params.no_pow_retargeting && (next_height).is_multiple_of(2016) {
             // First block in this epoch
             let first_block = self.get_header_by_height(next_height - 2016)?;
             let last_block = self.get_header_by_height(next_height - 1)?;
@@ -915,7 +915,7 @@ impl<PersistedState: ChainStore> ChainState<PersistedState> {
         // Difficulty adjustment window
         let window = params.params.miner_confirmation_window;
 
-        if !params.enforce_bip94 || height % window != 0 {
+        if !params.enforce_bip94 || !height.is_multiple_of(window) {
             return Ok(());
         }
 
@@ -1070,7 +1070,8 @@ impl<PersistedState: ChainStore> BlockchainInterface for ChainState<PersistedSta
     }
 
     fn get_tx(&self, _txid: &Txid) -> Result<Option<Transaction>, Self::Error> {
-        unimplemented!("This chainstate doesn't hold any tx")
+        // Pruned chainstate does not keep full transaction bodies.
+        Ok(None)
     }
 
     fn get_height(&self) -> Result<u32, Self::Error> {

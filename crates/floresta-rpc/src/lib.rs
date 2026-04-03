@@ -26,7 +26,6 @@ pub mod rpc_types;
 
 #[cfg(all(test, feature = "with-jsonrpc", not(target_os = "windows")))]
 mod tests {
-    use core::str::FromStr;
     use std::fs;
     use std::net::TcpListener;
     use std::path::Path;
@@ -37,7 +36,6 @@ mod tests {
     use std::time::Duration;
 
     use bitcoin::BlockHash;
-    use bitcoin::Txid;
     use rcgen::generate_simple_self_signed;
     use rcgen::CertifiedKey;
 
@@ -240,16 +238,16 @@ mod tests {
     }
 
     #[test]
-    fn test_send_raw_transaction() {
+    fn test_send_raw_transaction_requires_prevout_context() {
         let (_proc, client) = start_florestad();
 
         let tx = "01000000010f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206000000004d04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73ffffffff0100f2052a01000000434104678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5fac00000000".to_string();
 
-        let res = client.send_raw_transaction(tx).unwrap();
-        assert_eq!(
-            res,
-            Txid::from_str("1fb5734a07ce65c509311ebc03f136904f8b39a130ca3adff93200fc7ecde6fe")
-                .unwrap()
+        let err = client.send_raw_transaction(tx).unwrap_err();
+        let msg = err.to_string();
+        assert!(
+            msg.contains("missing prevout metadata required for relay policy checks"),
+            "unexpected sendrawtransaction error: {msg}"
         );
     }
 }

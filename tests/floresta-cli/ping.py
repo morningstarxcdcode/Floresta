@@ -26,19 +26,26 @@ class PingTest(FlorestaTestFramework):
         # Connect floresta to bitcoind
         self.connect_nodes(self.florestad, self.bitcoind)
 
-        # Check that we have a connection, but no ping yet
+        # Record the current ping byte counter as a baseline.
         peer_info = self.bitcoind.rpc.get_peerinfo()
-        quantity_message = peer_info[0]["bytesrecv_per_msg"].get("ping", 0)
+        initial_ping_bytes = peer_info[0]["bytesrecv_per_msg"].get("ping", 0)
 
         # Send a ping to bitcoind
         self.log("Sending ping to bitcoind...")
         self.florestad.rpc.ping()
 
-        # Check that bitcoind received the ping
-        peer_info = self.bitcoind.rpc.get_peerinfo()
-        self.assertEqual(
-            peer_info[0]["bytesrecv_per_msg"]["ping"], quantity_message * 2
-        )
+        # Check that bitcoind received at least one additional ping.
+        # Depending on timing, bitcoind may already have ping traffic before this test ping.
+        final_ping_bytes = initial_ping_bytes
+        timeout = time.time() + 10
+        while time.time() < timeout:
+            peer_info = self.bitcoind.rpc.get_peerinfo()
+            final_ping_bytes = peer_info[0]["bytesrecv_per_msg"].get("ping", 0)
+            if final_ping_bytes > initial_ping_bytes:
+                break
+            time.sleep(0.25)
+
+        self.assertTrue(final_ping_bytes > initial_ping_bytes)
 
 
 if __name__ == "__main__":

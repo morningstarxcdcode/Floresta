@@ -17,7 +17,6 @@
 #![doc(
     html_favicon_url = "https://raw.githubusercontent.com/getfloresta/floresta-media/master/logo_png/Icon-Green(main).png"
 )]
-
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), deny(clippy::unwrap_used))]
 

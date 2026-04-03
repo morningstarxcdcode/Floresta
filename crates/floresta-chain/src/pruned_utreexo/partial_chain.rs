@@ -155,7 +155,7 @@ impl PartialChainStateInner {
 
         // ... If we came this far, we consider this block valid ...
 
-        if height % 10_000 == 0 {
+        if height.is_multiple_of(10_000) {
             info!(
                 "Downloading blocks: height={height} hash={}",
                 block.block_hash()
